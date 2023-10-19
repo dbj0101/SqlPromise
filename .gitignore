@@ -1,0 +1,12 @@
+# ignore ALL .log files
+*.log
+
+# ignore ALL files in ANY directory named temp
+temp/
+
+# ignore environment variables and gitignore file
+.env
+.gitignore
+
+#ignore node_modules files
+node_modules/
