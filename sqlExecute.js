@@ -74,6 +74,48 @@ const execSqlDatatable = (connectionName, sqlQuery) => new Promise( (resolve, re
 });
 
 //public function
+//returns number of rows affected
+//use for INSERT, UPDATE, DELETE, CREATE, DROP, etc...
+const execSqlValue = (connectionName, sqlQuery) => new Promise( (resolve, reject) => {
+    //Build the database connection from environment file (.env)
+    const connectionString = connectionInfo.getConnection(connectionName);
+    const databaseConnection = require("tedious").Connection;
+    const config = getConnectionConfig(connectionString);
+
+    //prep main variables
+    let result = {};
+    let dbConn = new databaseConnection(config);
+    let Request = require('tedious').Request;  
+
+    dbConn.connect((err) => {
+        if(err) {
+            console.log('Connection failed');
+            throw err;
+        }
+        executeStatement();
+    });
+
+    function executeStatement() {  
+        const req = new Request(sqlQuery, (err, rowCount) => {
+            if(err) {
+                reject(err);
+            }
+            else {
+                result["returnMessage"] = `${rowCount} ${rowCount==1 ? "row" : "rows"} affected`;
+                result["rowCount"] = rowCount;
+                resolve(result);
+            }
+        });
+        
+        // Close the connection after the final event emitted by the request, after the callback passes
+        req.on("requestCompleted", () => {
+            dbConn.close();
+        });
+        dbConn.execSql(req);
+    }
+});
+
+//public function
 //returns Datatable result set in object format
 const execStoredProcedureDatatable = (connectionName, storedProc, params) => new Promise( (resolve, reject) => {
     //Build the database connection from environment file (.env)
@@ -210,5 +252,5 @@ function addParameter(name, type, value, isOutput) {
 }
 
 
-module.exports = { TYPES, addParameterList, addParameter, execSqlDatatable, execStoredProcedureDatatable, execStoredProcedureValue };
+module.exports = { TYPES, addParameterList, addParameter, execSqlDatatable, execSqlValue, execStoredProcedureDatatable, execStoredProcedureValue };
 
